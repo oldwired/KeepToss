@@ -61,7 +61,7 @@
         <DCC_UsePackage>NexusDB475ssc370;FireDACIBDriver;vclwinx;NexusDB475tm370;fmx;vclie;DbxCommonDriver;bindengine;IndyIPCommon;VCLRESTComponents;FireDACCommonODBC;NexusDB475rd370;FMX_FlexCel_Components;IndyProtocols;TMSVCLUIPackPkgWiz;vclx;Skia.Package.RTL;dbxcds;vcledge;FmxTeeUI;FlexCel_Pdf;TMSVCLUIPackPkgEx;vclribbon;FireDACSqliteDriver;DbxClientDriver;NexusDB475tn370;soapmidas;NexusDB475re370;unidacvcl370;dacfmx370;vquery370;RVIndyD13;TeeUI;dbexpress;TMSCloudPkgDE;XLSRWII7_VCL_DDX13;siInternetTranslator_13r;NexusDB475scr370;TMSVCLUIPackPkg;XLSRWII7_DDX13;inet;vcltouch;FMX_FlexCel_Core;NexusDB475sscr370;fmxdae;VCL_FlexCel_Core;CustomIPTransport;RVMathD13;OmniThreadLibraryRuntime;IndySystem;NexusDB475ts370;NexusDB475rp370;XLSSpreadSheet3_DDX13;unidacfmx370;NexusDB475mr370;RichViewActionsD13;TMSVCLIWPkg;vclFireDAC;FlexCel_Render;FireDACCommon;NexusDB475ch370;TMSVCLIWPkgDE;RVDBPkgD13;vacommpkg;bindcompdbx;NexusDB475ll370;rtl;FireDACMySQLDriver;VCL_FlexCel_Components;DBXSqliteDriver;IcsCommonNewRun;SRVDBControlsD13;RVPkgD13;NexusDB475pt370;vclimg;inetdbxpress;FireDAC;NexusDB475se370;xmlrtl;NexusDB475ssx370;dsnap;NexusDB475sq370;fmxobj;bindcompvclsmp;NexusDB475tc370;NexusDB475tw370;NexusDB475psi370;FireDACCommonDriver;NexusDB475st370;IndyIPClient;NexusDB475sp370;TMSCloudPkg;bindcompvclwinx;bindcompfmx;AdvChartLinkPkg;TMSCryptoPkg;DBSRVPkgD13;NexusDB475pv370;inetdb;wPDF5_Delphi_11_Pack;SRVPkgD13;NexusDB475psd370;NexusDB475sr370;unidac370;SRVControlsD13;Tee;RvHtmlD13;vclactnband;TMSMQTTPkg;fmxFireDAC;RVASpellPkgD13;DBXMySQLDriver;VclSmp;fmxase;hbTapi29;dbrtl;TMSDiagram;Skia.Package.FMX;NexusDB475si370;FlexCel_XlsAdapter;TeeDB;FireDACMSAccDriver;NexusDB475ssll370;vcldsnap;DBXInterBaseDriver;RvXmlD13;AdvChartPkgDE;TMSVCLUIPackPkgXls;TsiLang_13r;NexusDB475sd370;Skia.Package.VCL;vcldb;NexusDB475sll370;FlexCel_Core;bindcomp;RVHunSpellPkgD13;inetstn;IndyCore;RESTBackendComponents;TMSMQTTPkgDE;NexusDB475rb370;FireDACADSDriver;RaizeComponentsVclDb;NexusDB475lg370;RESTComponents;IndyIPServer;vcl;dsnapxml;adortl;dsnapcon;dac370;TaurusTLS_RT;Mylib1;IcsVclNewRun;NexusDB475db370;crcontrols370;NexusDB475th370;FireDACPgDriver;vacommpkgde;AdvChartPkg;tethering;bindcompvcl;NexusDB475rc370;CloudService;dacvcl370;FMXTee;NexusDB475iv370;soaprtl;NexusDB475wsc370;RaizeComponentsVcl;soapserver;$(DCC_UsePackage)</DCC_UsePackage>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.1.0;InternalName=KeepToss;LegalCopyright=;LegalTrademarks=;OriginalFilename=KeepToss.exe;ProgramID=de.oldwired.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.1.0;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>FileDescription=$(MSBuildProjectName);FileVersion=1.1.0.0;InternalName=KeepToss;OriginalFilename=KeepToss.exe;ProgramID=de.oldwired.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.1.0.0</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_ConsoleTarget>true</DCC_ConsoleTarget>
         <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
@@ -70,7 +70,7 @@
         <Manifest_File>(Ohne)</Manifest_File>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Release>1</VerInfo_Release>
+        <VerInfo_MinorVer>1</VerInfo_MinorVer>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <DCC_UsePackage>NexusDB475ssc370;FireDACIBDriver;vclwinx;NexusDB475tm370;fmx;vclie;DbxCommonDriver;bindengine;IndyIPCommon;VCLRESTComponents;FireDACCommonODBC;NexusDB475rd370;FMX_FlexCel_Components;IndyProtocols;TMSVCLUIPackPkgWiz;vclx;dbxcds;vcledge;FmxTeeUI;FlexCel_Pdf;TMSVCLUIPackPkgEx;vclribbon;FireDACSqliteDriver;DbxClientDriver;NexusDB475tn370;soapmidas;NexusDB475re370;TeeUI;dbexpress;TMSCloudPkgDE;NexusDB475scr370;TMSVCLUIPackPkg;inet;vcltouch;FMX_FlexCel_Core;NexusDB475sscr370;fmxdae;VCL_FlexCel_Core;CustomIPTransport;OmniThreadLibraryRuntime;IndySystem;NexusDB475ts370;NexusDB475rp370;NexusDB475mr370;TMSVCLIWPkg;vclFireDAC;FlexCel_Render;FireDACCommon;NexusDB475ch370;vacommpkg;bindcompdbx;NexusDB475ll370;rtl;FireDACMySQLDriver;VCL_FlexCel_Components;DBXSqliteDriver;IcsCommonNewRun;NexusDB475pt370;vclimg;inetdbxpress;FireDAC;NexusDB475se370;xmlrtl;NexusDB475ssx370;dsnap;NexusDB475sq370;fmxobj;bindcompvclsmp;NexusDB475tc370;NexusDB475tw370;NexusDB475psi370;FireDACCommonDriver;NexusDB475st370;IndyIPClient;NexusDB475sp370;TMSCloudPkg;bindcompvclwinx;bindcompfmx;AdvChartLinkPkg;TMSCryptoPkg;NexusDB475pv370;inetdb;NexusDB475psd370;NexusDB475sr370;Tee;vclactnband;TMSMQTTPkg;fmxFireDAC;DBXMySQLDriver;VclSmp;fmxase;hbTapi29;dbrtl;TMSDiagram;NexusDB475si370;FlexCel_XlsAdapter;TeeDB;FireDACMSAccDriver;NexusDB475ssll370;vcldsnap;DBXInterBaseDriver;TMSVCLUIPackPkgXls;NexusDB475sd370;Skia.Package.VCL;vcldb;NexusDB475sll370;FlexCel_Core;bindcomp;inetstn;IndyCore;RESTBackendComponents;TMSMQTTPkgDE;NexusDB475rb370;FireDACADSDriver;RaizeComponentsVclDb;NexusDB475lg370;RESTComponents;IndyIPServer;vcl;dsnapxml;adortl;dsnapcon;Mylib1;IcsVclNewRun;NexusDB475db370;NexusDB475th370;FireDACPgDriver;vacommpkgde;AdvChartPkg;tethering;bindcompvcl;NexusDB475rc370;CloudService;FMXTee;NexusDB475iv370;soaprtl;NexusDB475wsc370;RaizeComponentsVcl;soapserver;$(DCC_UsePackage)</DCC_UsePackage>
@@ -93,6 +93,8 @@
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>(Ohne)</Manifest_File>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
+        <VerInfo_Keys>FileDescription=$(MSBuildProjectName);FileVersion=1.1.0.0;InternalName=KeepToss;OriginalFilename=KeepToss.exe;ProgramID=de.oldwired.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.1.0.0</VerInfo_Keys>
+        <VerInfo_MinorVer>1</VerInfo_MinorVer>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -102,6 +104,8 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <VerInfo_Locale>1033</VerInfo_Locale>
+        <VerInfo_Keys>FileDescription=$(MSBuildProjectName);FileVersion=1.1.0.0;InternalName=KeepToss;OriginalFilename=KeepToss.exe;ProgramID=de.oldwired.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.1.0.0</VerInfo_Keys>
+        <VerInfo_MinorVer>1</VerInfo_MinorVer>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">

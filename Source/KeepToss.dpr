@@ -50,6 +50,7 @@ type
     FIsSource: Boolean;  { True if this is the source list (for mouse actions) }
     constructor Init(var Bounds: TRect; AVScrollBar: PScrollBar; AIsSource: Boolean);
     destructor Done; virtual;
+    function GetPalette: PPalette; virtual;
     function GetText(Item: Integer; MaxLen: Integer): string; virtual;
     procedure HandleEvent(var Event: TEvent); virtual;
     procedure LoadFolder(const AFolder: string);
@@ -227,7 +228,9 @@ begin
   FCount := 0;
   FIsSource := AIsSource;
   SetLength(FSamples, 0);
-  Options := Options or ofSelectable or ofFirstClick;
+  { Only source list is selectable }
+  if AIsSource then
+    Options := Options or ofSelectable or ofFirstClick;
   GrowMode := gfGrowHiX + gfGrowHiY;
 end;
 
@@ -235,6 +238,16 @@ destructor TSampleListView.Done;
 begin
   SetLength(FSamples, 0);
   inherited Done;
+end;
+
+function TSampleListView.GetPalette: PPalette;
+const
+  { Palette indices into app palette (not direct colors!) }
+  { Format: Active, Inactive, Focused, Selected, Divider }
+  { Using: 2=black on gray, 21=yellow on cyan (focused), 5=black on green (selected) }
+  P: ShortString = #2#2#21#5#2;
+begin
+  Result := @P;
 end;
 
 function TSampleListView.GetText(Item: Integer; MaxLen: Integer): string;
@@ -257,8 +270,8 @@ begin
   else
     SizeStr := Format('%d B', [FSamples[Item].FileSize]);
 
-  { Calculate available width for filename }
-  NameWidth := MaxLen - Length(SizeStr) - 3;
+  { Calculate available width for filename (reserve space for size + padding) }
+  NameWidth := MaxLen - Length(SizeStr) - 4;
   if NameWidth < 10 then NameWidth := 10;
 
   { Truncate or pad filename }
@@ -307,8 +320,14 @@ begin
   end;
 
   SetRange(FCount);
-  if FCount > 0 then
-    FocusItem(0);
+  { Only focus first item in source list; target list has no selection }
+  if FIsSource then
+  begin
+    if FCount > 0 then
+      FocusItem(0);
+  end
+  else
+    Focused := -1;  { No selection in target list }
   DrawView;
 end;
 
@@ -400,8 +419,8 @@ begin
   MoveChar(B, ' ', Color, Size.X);
 
   MidX := Size.X div 2;
-  SourceWidth := MidX - 1;
-  TargetWidth := Size.X - MidX - 1;
+  SourceWidth := MidX;
+  TargetWidth := Size.X - MidX;
 
   { Draw source path }
   if FSourcePath <> nil then
@@ -412,16 +431,13 @@ begin
     MoveStr(B, S, Color);
   end;
 
-  { Draw separator }
-  MoveChar(B[MidX - 1], '|', Color, 1);
-
   { Draw target path }
   if FTargetPath <> nil then
   begin
     S := ShortString('Target: ' + FTargetPath^);
     if Length(S) > TargetWidth then
       S := Copy(S, 1, TargetWidth - 3) + '...';
-    MoveStr(B[MidX + 1], S, Color);
+    MoveStr(B[MidX], S, Color);
   end;
 
   WriteLine(0, 0, Size.X, 1, B);
@@ -757,23 +773,22 @@ begin
   { Left side: Source list with scrollbar (below header) }
   Desktop^.GetExtent(R);
   R.A.Y := R.A.Y + 1; { Start below header }
-  R.A.X := MidX - 2;
-  R.B.X := MidX - 1;
+  R.A.X := MidX - 1;
+  R.B.X := MidX;
   SourceScrollBar := New(PScrollBar, Init(R));
-  Desktop^.Insert(SourceScrollBar);
 
   Desktop^.GetExtent(R);
   R.A.Y := R.A.Y + 1; { Start below header }
-  R.B.X := MidX - 2;
+  R.B.X := MidX - 1;
   SourceList := New(PSampleListView, Init(R, SourceScrollBar, True));  { IsSource = True }
   Desktop^.Insert(SourceList);
+  Desktop^.Insert(SourceScrollBar);  { Insert after list so it draws on top }
 
   { Right side: Target list with scrollbar (below header) }
   Desktop^.GetExtent(R);
   R.A.Y := R.A.Y + 1; { Start below header }
   R.A.X := R.B.X - 1;
   TargetScrollBar := New(PScrollBar, Init(R));
-  Desktop^.Insert(TargetScrollBar);
 
   Desktop^.GetExtent(R);
   R.A.Y := R.A.Y + 1; { Start below header }
@@ -781,6 +796,11 @@ begin
   R.B.X := R.B.X - 1;
   TargetList := New(PSampleListView, Init(R, TargetScrollBar, False));  { IsSource = False }
   Desktop^.Insert(TargetList);
+  Desktop^.Insert(TargetScrollBar);  { Insert after list so it draws on top }
+
+  { Ensure scrollbars are visible }
+  SourceScrollBar^.Show;
+  TargetScrollBar^.Show;
 
   { Focus source list }
   SourceList^.Select;
@@ -1064,8 +1084,8 @@ end;
 
 begin
   try
-    { Increase double-click delay from 8 to 12 ticks (~660ms) for easier double-clicking }
-    DoubleDelay := 12;
+    { Double-click delay in ticks (default 8 = ~440ms) }
+    DoubleDelay := 8;
 
     KeepTossApp.Init;
     if (KeepTossApp.SourceFolder <> '') and (KeepTossApp.TargetFolder <> '') then

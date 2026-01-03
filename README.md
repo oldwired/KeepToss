@@ -2,6 +2,8 @@
 
 A keyboard-driven audio sample preview and sorting tool with a dual-pane console interface.
 
+![KeepToss Screenshot](assets/keeptoss.png)
+
 ## Features
 
 - **Dual-pane view**: Source folder on the left, target folder on the right
