@@ -111,18 +111,20 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="..\Libraries\fv-delphi\src\Objects.pas"/>
-        <DCCReference Include="..\Libraries\fv-delphi\src\Video.pas"/>
-        <DCCReference Include="..\Libraries\fv-delphi\src\Drivers.pas"/>
-        <DCCReference Include="..\Libraries\fv-delphi\src\Views.pas"/>
-        <DCCReference Include="..\Libraries\fv-delphi\src\Menus.pas"/>
-        <DCCReference Include="..\Libraries\fv-delphi\src\histlist.pas"/>
-        <DCCReference Include="..\Libraries\fv-delphi\src\fvconsts.pas"/>
-        <DCCReference Include="..\Libraries\fv-delphi\src\app.pas"/>
-        <DCCReference Include="..\Libraries\fv-delphi\src\FVCommon.pas"/>
-        <DCCReference Include="..\Libraries\fv-delphi\src\Validate.pas"/>
-        <DCCReference Include="..\Libraries\fv-delphi\src\Dialogs.pas"/>
-        <DCCReference Include="..\Libraries\fv-delphi\src\MsgBox.pas"/>
+        <DCCReference Include="..\Libraries\fv-delphi-modern\src\Objects.pas"/>
+        <DCCReference Include="..\Libraries\fv-delphi-modern\src\Video.pas"/>
+        <DCCReference Include="..\Libraries\fv-delphi-modern\src\Drivers.pas"/>
+        <DCCReference Include="..\Libraries\fv-delphi-modern\src\FVInterfaces.pas"/>
+        <DCCReference Include="..\Libraries\fv-delphi-modern\src\FVSerialization.pas"/>
+        <DCCReference Include="..\Libraries\fv-delphi-modern\src\Views.pas"/>
+        <DCCReference Include="..\Libraries\fv-delphi-modern\src\Menus.pas"/>
+        <DCCReference Include="..\Libraries\fv-delphi-modern\src\histlist.pas"/>
+        <DCCReference Include="..\Libraries\fv-delphi-modern\src\fvconsts.pas"/>
+        <DCCReference Include="..\Libraries\fv-delphi-modern\src\app.pas"/>
+        <DCCReference Include="..\Libraries\fv-delphi-modern\src\FVCommon.pas"/>
+        <DCCReference Include="..\Libraries\fv-delphi-modern\src\Validate.pas"/>
+        <DCCReference Include="..\Libraries\fv-delphi-modern\src\Dialogs.pas"/>
+        <DCCReference Include="..\Libraries\fv-delphi-modern\src\MsgBox.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

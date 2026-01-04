@@ -9,18 +9,20 @@ uses
   System.IOUtils,
   Winapi.Windows,
   Winapi.MMSystem,
-  Objects in '..\Libraries\fv-delphi\src\Objects.pas',
-  Video in '..\Libraries\fv-delphi\src\Video.pas',
-  Drivers in '..\Libraries\fv-delphi\src\Drivers.pas',
-  Views in '..\Libraries\fv-delphi\src\Views.pas',
-  Menus in '..\Libraries\fv-delphi\src\Menus.pas',
-  HistList in '..\Libraries\fv-delphi\src\histlist.pas',
-  fvconsts in '..\Libraries\fv-delphi\src\fvconsts.pas',
-  App in '..\Libraries\fv-delphi\src\app.pas',
-  FVCommon in '..\Libraries\fv-delphi\src\FVCommon.pas',
-  Validate in '..\Libraries\fv-delphi\src\Validate.pas',
-  Dialogs in '..\Libraries\fv-delphi\src\Dialogs.pas',
-  MsgBox in '..\Libraries\fv-delphi\src\MsgBox.pas';
+  Objects in '..\Libraries\fv-delphi-modern\src\Objects.pas',
+  Video in '..\Libraries\fv-delphi-modern\src\Video.pas',
+  Drivers in '..\Libraries\fv-delphi-modern\src\Drivers.pas',
+  FVInterfaces in '..\Libraries\fv-delphi-modern\src\FVInterfaces.pas',
+  FVSerialization in '..\Libraries\fv-delphi-modern\src\FVSerialization.pas',
+  Views in '..\Libraries\fv-delphi-modern\src\Views.pas',
+  Menus in '..\Libraries\fv-delphi-modern\src\Menus.pas',
+  HistList in '..\Libraries\fv-delphi-modern\src\histlist.pas',
+  fvconsts in '..\Libraries\fv-delphi-modern\src\fvconsts.pas',
+  App in '..\Libraries\fv-delphi-modern\src\app.pas',
+  FVCommon in '..\Libraries\fv-delphi-modern\src\FVCommon.pas',
+  Validate in '..\Libraries\fv-delphi-modern\src\Validate.pas',
+  Dialogs in '..\Libraries\fv-delphi-modern\src\Dialogs.pas',
+  MsgBox in '..\Libraries\fv-delphi-modern\src\MsgBox.pas';
 
 const
   { Application commands }
@@ -42,17 +44,16 @@ type
   end;
 
   { Custom list viewer for sample files }
-  PSampleListView = ^TSampleListView;
-  TSampleListView = object(TListViewer)
+  TSampleListView = class(TListViewer)
     FFolder: string;
     FSamples: array of TSampleInfo;
     FCount: Integer;
     FIsSource: Boolean;  { True if this is the source list (for mouse actions) }
-    constructor Init(var Bounds: TRect; AVScrollBar: PScrollBar; AIsSource: Boolean);
-    destructor Done; virtual;
-    function GetPalette: PPalette; virtual;
-    function GetText(Item: Integer; MaxLen: Integer): string; virtual;
-    procedure HandleEvent(var Event: TEvent); virtual;
+    constructor Create(var Bounds: TRect; AVScrollBar: TScrollBar; AIsSource: Boolean); reintroduce; virtual;
+    destructor Destroy; override;
+    function GetPalette: PPalette; override;
+    function GetText(Item: Integer; MaxLen: Integer): string; override;
+    procedure HandleEvent(var Event: TEvent); override;
     procedure LoadFolder(const AFolder: string);
     procedure RemoveItem(Index: Integer);
     function GetFullPath(Index: Integer): string;
@@ -60,45 +61,42 @@ type
   end;
 
   { Header view showing folder paths }
-  PPathHeader = ^TPathHeader;
-  TPathHeader = object(TView)
+  TPathHeader = class(TView)
     FSourcePath: ^string;
     FTargetPath: ^string;
-    constructor Init(var Bounds: TRect; ASourcePath, ATargetPath: Pointer);
-    procedure Draw; virtual;
-    procedure HandleEvent(var Event: TEvent); virtual;
+    constructor Create(var Bounds: TRect; ASourcePath, ATargetPath: Pointer); reintroduce; virtual;
+    procedure Draw; override;
+    procedure HandleEvent(var Event: TEvent); override;
   end;
 
   { Custom status line with autoplay indicator }
-  PKeepTossStatusLine = ^TKeepTossStatusLine;
-  TKeepTossStatusLine = object(TStatusLine)
+  TKeepTossStatusLine = class(TStatusLine)
     FAutoPlay: PBoolean;
-    function Hint(AHelpCtx: Word): ShortString; virtual;
+    function Hint(AHelpCtx: Word): ShortString; override;
   end;
 
   { Main application }
-  PKeepTossApp = ^TKeepTossApp;
-  TKeepTossApp = object(TApplication)
+  TKeepTossApp = class(TApplication)
     SourceFolder: string;
     TargetFolder: string;
     AutoPlay: Boolean;
     IsPlaying: Boolean;
-    PathHeader: PPathHeader;
-    SourceList: PSampleListView;
-    TargetList: PSampleListView;
-    SourceScrollBar: PScrollBar;
-    TargetScrollBar: PScrollBar;
+    PathHeader: TPathHeader;
+    SourceList: TSampleListView;
+    TargetList: TSampleListView;
+    SourceScrollBar: TScrollBar;
+    TargetScrollBar: TScrollBar;
     LastOp: TOperationType;
     LastSrcFile: string;
     LastDestFile: string;
     LastIndex: Integer;
     LastFocused: Integer;
-    constructor Init;
-    destructor Done; virtual;
-    procedure InitMenuBar; virtual;
-    procedure InitStatusLine; virtual;
-    procedure HandleEvent(var Event: TEvent); virtual;
-    procedure Idle; virtual;
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure InitMenuBar; override;
+    procedure InitStatusLine; override;
+    procedure HandleEvent(var Event: TEvent); override;
+    procedure Idle; override;
     procedure SelectSourceFolder;
     procedure SelectTargetFolder;
     procedure CreateListViews;
@@ -124,37 +122,37 @@ var
 function FolderInputBox(const Title, ALabel: string; var S: string): Word;
 var
   R: TRect;
-  Dialog: PDialog;
-  InputLine: PInputLine;
+  Dialog: TDialog;
+  InputLine: TInputLine;
   ShortS: ShortString;
 begin
   R.Assign(0, 0, 60, 8);
-  R.Move((Desktop^.Size.X - R.B.X) div 2, (Desktop^.Size.Y - R.B.Y) div 2);
-  Dialog := New(PDialog, Init(R, Title));
-  with Dialog^ do
+  R.Move((Desktop.Size.X - R.B.X) div 2, (Desktop.Size.Y - R.B.Y) div 2);
+  Dialog := TDialog.Create(R, Title);
+  with Dialog do
   begin
     R.Assign(4 + Length(ALabel), 2, Size.X - 3, 3);
-    InputLine := New(PInputLine, Init(R, 255));
+    InputLine := TInputLine.Create(R, 255);
     Insert(InputLine);
     R.Assign(2, 2, 3 + Length(ALabel), 3);
-    Insert(New(PLabel, Init(R, ALabel, InputLine)));
+    Insert(TLabel.Create(R, ALabel, InputLine));
     { OK button - default and placed first }
     R.Assign(Size.X - 24, Size.Y - 4, Size.X - 14, Size.Y - 2);
-    Insert(New(PButton, Init(R, 'O~K~', cmOk, bfDefault)));
+    Insert(TButton.Create(R, 'O~K~', cmOk, bfDefault));
     { Cancel button }
     Inc(R.A.X, 12);
     Inc(R.B.X, 12);
-    Insert(New(PButton, Init(R, 'Cancel', cmCancel, bfNormal)));
+    Insert(TButton.Create(R, 'Cancel', cmCancel, bfNormal));
   end;
   ShortS := ShortString(S);
-  InputLine^.SetData(ShortS);
-  Result := Desktop^.ExecView(Dialog);
+  InputLine.SetData(ShortS);
+  Result := Desktop.ExecView(Dialog);
   if Result = cmOk then
   begin
-    InputLine^.GetData(ShortS);
+    InputLine.GetData(ShortS);
     S := string(ShortS);
   end;
-  Dispose(Dialog, Done);
+  FreeAndNil(Dialog);
 end;
 
 function GetUniqueDestPath(const DestFolder, FileName: string): string;
@@ -222,9 +220,9 @@ end;
 { TSampleListView }
 { -------------------------------------------------------------------------- }
 
-constructor TSampleListView.Init(var Bounds: TRect; AVScrollBar: PScrollBar; AIsSource: Boolean);
+constructor TSampleListView.Create(var Bounds: TRect; AVScrollBar: TScrollBar; AIsSource: Boolean);
 begin
-  inherited Init(Bounds, 1, nil, AVScrollBar);
+  inherited Create(Bounds, 1, nil, AVScrollBar);
   FCount := 0;
   FIsSource := AIsSource;
   SetLength(FSamples, 0);
@@ -234,10 +232,10 @@ begin
   GrowMode := gfGrowHiX + gfGrowHiY;
 end;
 
-destructor TSampleListView.Done;
+destructor TSampleListView.Destroy;
 begin
   SetLength(FSamples, 0);
-  inherited Done;
+  inherited Destroy;
 end;
 
 function TSampleListView.GetPalette: PPalette;
@@ -400,9 +398,9 @@ end;
 { TPathHeader }
 { -------------------------------------------------------------------------- }
 
-constructor TPathHeader.Init(var Bounds: TRect; ASourcePath, ATargetPath: Pointer);
+constructor TPathHeader.Create(var Bounds: TRect; ASourcePath, ATargetPath: Pointer);
 begin
-  inherited Init(Bounds);
+  inherited Create(Bounds);
   FSourcePath := ASourcePath;
   FTargetPath := ATargetPath;
   GrowMode := gfGrowHiX;
@@ -482,9 +480,9 @@ end;
 { TKeepTossApp }
 { -------------------------------------------------------------------------- }
 
-constructor TKeepTossApp.Init;
+constructor TKeepTossApp.Create;
 begin
-  inherited Init;
+  inherited Create;
 
   { Initialize state }
   AutoPlay := False;
@@ -542,11 +540,11 @@ begin
   RefreshLists;
 end;
 
-destructor TKeepTossApp.Done;
+destructor TKeepTossApp.Destroy;
 begin
   { Stop any playing sound }
   sndPlaySound(nil, 0);
-  inherited Done;
+  inherited Destroy;
 end;
 
 procedure TKeepTossApp.InitMenuBar;
@@ -555,7 +553,7 @@ var
 begin
   GetExtent(R);
   R.B.Y := R.A.Y + 1;
-  MenuBar := New(PMenuBar, Init(R, NewMenu(
+  MenuBar := TMenuBar.Create(R, NewMenu(
     NewSubMenu('~F~ile', hcNoContext, NewMenu(
       NewItem('~S~ource Folder...', '', 0, cmSelectSource, hcNoContext,
       NewItem('~T~arget Folder...', '', 0, cmSelectTarget, hcNoContext,
@@ -568,7 +566,7 @@ begin
       NewItem('~U~ndo', 'Z', 0, cmUndo, hcNoContext, nil))))),
     NewSubMenu('~O~ptions', hcNoContext, NewMenu(
       NewItem('Toggle ~A~utoplay', 'A', 0, cmToggleAuto, hcNoContext, nil)),
-    nil))))));
+    nil)))));
 end;
 
 procedure TKeepTossApp.InitStatusLine;
@@ -577,7 +575,7 @@ var
 begin
   GetExtent(R);
   R.A.Y := R.B.Y - 1;
-  StatusLine := New(PKeepTossStatusLine, Init(R,
+  StatusLine := TKeepTossStatusLine.Create(R,
     NewStatusDef(0, $FFFF,
       NewStatusKey('~Space~ Play', 0, 0,
       NewStatusKey('~C~opy', 0, 0,
@@ -587,8 +585,8 @@ begin
       NewStatusKey('~S~wap', 0, 0,
       NewStatusKey('~R~efresh', 0, 0,
       NewStatusKey('~A~uto', 0, 0,
-      NewStatusKey('~Alt-X~ Exit', kbAltX, cmQuit, nil))))))))), nil)));
-  PKeepTossStatusLine(StatusLine)^.FAutoPlay := @AutoPlay;
+      NewStatusKey('~Alt-X~ Exit', kbAltX, cmQuit, nil))))))))), nil));
+  TKeepTossStatusLine(StatusLine).FAutoPlay := @AutoPlay;
 end;
 
 procedure TKeepTossApp.HandleEvent(var Event: TEvent);
@@ -650,15 +648,15 @@ begin
       'n', 'N':
         begin
           { Select next sample (same as arrow down) }
-          if (SourceList <> nil) and (SourceList^.Focused < SourceList^.FCount - 1) then
-            SourceList^.FocusItem(SourceList^.Focused + 1);
+          if (SourceList <> nil) and (SourceList.Focused < SourceList.FCount - 1) then
+            SourceList.FocusItem(SourceList.Focused + 1);
           ClearEvent(Event);
         end;
       'p', 'P':
         begin
           { Select previous sample (same as arrow up) }
-          if (SourceList <> nil) and (SourceList^.Focused > 0) then
-            SourceList^.FocusItem(SourceList^.Focused - 1);
+          if (SourceList <> nil) and (SourceList.Focused > 0) then
+            SourceList.FocusItem(SourceList.Focused - 1);
           ClearEvent(Event);
         end;
       'r', 'R':
@@ -679,7 +677,7 @@ begin
           begin
             RefreshLists;
             if PathHeader <> nil then
-              PathHeader^.DrawView;
+              PathHeader.DrawView;
           end;
         end;
       cmSelectTarget:
@@ -689,7 +687,7 @@ begin
           begin
             RefreshLists;
             if PathHeader <> nil then
-              PathHeader^.DrawView;
+              PathHeader.DrawView;
           end;
         end;
       cmCopy:
@@ -716,9 +714,9 @@ begin
   { Handle navigation - detect when focused item changes }
   if SourceList <> nil then
   begin
-    if SourceList^.Focused <> LastFocused then
+    if SourceList.Focused <> LastFocused then
     begin
-      LastFocused := SourceList^.Focused;
+      LastFocused := SourceList.Focused;
       if AutoPlay then
         DoPlay
       else
@@ -762,69 +760,69 @@ var
 begin
   if Desktop = nil then Exit;
 
-  Desktop^.GetExtent(R);
+  Desktop.GetExtent(R);
   MidX := (R.A.X + R.B.X) div 2;
 
   { Header row showing folder paths }
   R.B.Y := R.A.Y + 1;
-  PathHeader := New(PPathHeader, Init(R, @SourceFolder, @TargetFolder));
-  Desktop^.Insert(PathHeader);
+  PathHeader := TPathHeader.Create(R, @SourceFolder, @TargetFolder);
+  Desktop.Insert(PathHeader);
 
   { Left side: Source list with scrollbar (below header) }
-  Desktop^.GetExtent(R);
+  Desktop.GetExtent(R);
   R.A.Y := R.A.Y + 1; { Start below header }
   R.A.X := MidX - 1;
   R.B.X := MidX;
-  SourceScrollBar := New(PScrollBar, Init(R));
+  SourceScrollBar := TScrollBar.Create(R);
 
-  Desktop^.GetExtent(R);
+  Desktop.GetExtent(R);
   R.A.Y := R.A.Y + 1; { Start below header }
   R.B.X := MidX - 1;
-  SourceList := New(PSampleListView, Init(R, SourceScrollBar, True));  { IsSource = True }
-  Desktop^.Insert(SourceList);
-  Desktop^.Insert(SourceScrollBar);  { Insert after list so it draws on top }
+  SourceList := TSampleListView.Create(R, SourceScrollBar, True);  { IsSource = True }
+  Desktop.Insert(SourceList);
+  Desktop.Insert(SourceScrollBar);  { Insert after list so it draws on top }
 
   { Right side: Target list with scrollbar (below header) }
-  Desktop^.GetExtent(R);
+  Desktop.GetExtent(R);
   R.A.Y := R.A.Y + 1; { Start below header }
   R.A.X := R.B.X - 1;
-  TargetScrollBar := New(PScrollBar, Init(R));
+  TargetScrollBar := TScrollBar.Create(R);
 
-  Desktop^.GetExtent(R);
+  Desktop.GetExtent(R);
   R.A.Y := R.A.Y + 1; { Start below header }
   R.A.X := MidX;
   R.B.X := R.B.X - 1;
-  TargetList := New(PSampleListView, Init(R, TargetScrollBar, False));  { IsSource = False }
-  Desktop^.Insert(TargetList);
-  Desktop^.Insert(TargetScrollBar);  { Insert after list so it draws on top }
+  TargetList := TSampleListView.Create(R, TargetScrollBar, False);  { IsSource = False }
+  Desktop.Insert(TargetList);
+  Desktop.Insert(TargetScrollBar);  { Insert after list so it draws on top }
 
   { Ensure scrollbars are visible }
-  SourceScrollBar^.Show;
-  TargetScrollBar^.Show;
+  SourceScrollBar.Show;
+  TargetScrollBar.Show;
 
   { Focus source list }
-  SourceList^.Select;
+  SourceList.Select;
 end;
 
 procedure TKeepTossApp.RefreshLists;
 begin
   if SourceList <> nil then
   begin
-    SourceList^.LoadFolder(SourceFolder);
-    if SourceList^.FCount = 0 then
+    SourceList.LoadFolder(SourceFolder);
+    if SourceList.FCount = 0 then
       MessageBox('No WAV files found in source folder.', nil, mfInformation + mfOKButton);
   end;
   if TargetList <> nil then
   begin
     { Only load if directory exists - don't create it just for display }
     if DirectoryExists(TargetFolder) then
-      TargetList^.LoadFolder(TargetFolder)
+      TargetList.LoadFolder(TargetFolder)
     else
     begin
-      TargetList^.FCount := 0;
-      SetLength(TargetList^.FSamples, 0);
-      TargetList^.SetRange(0);
-      TargetList^.DrawView;
+      TargetList.FCount := 0;
+      SetLength(TargetList.FSamples, 0);
+      TargetList.SetRange(0);
+      TargetList.DrawView;
     end;
   end;
 end;
@@ -839,7 +837,7 @@ begin
   RefreshLists;
   { Redraw header to show new paths }
   if PathHeader <> nil then
-    PathHeader^.DrawView;
+    PathHeader.DrawView;
   LastOp := opNone; { Clear undo after swap }
 end;
 
@@ -847,9 +845,9 @@ procedure TKeepTossApp.DoPlay;
 var
   Path: string;
 begin
-  if (SourceList = nil) or (SourceList^.FCount = 0) then Exit;
+  if (SourceList = nil) or (SourceList.FCount = 0) then Exit;
 
-  Path := SourceList^.GetFullPath(SourceList^.Focused);
+  Path := SourceList.GetFullPath(SourceList.Focused);
   if Path = '' then Exit;
 
   { Stop any currently playing sound }
@@ -870,7 +868,7 @@ var
   Src, Dest: string;
 begin
   if SourceList = nil then Exit;
-  if SourceList^.FCount = 0 then
+  if SourceList.FCount = 0 then
   begin
     MessageBox('No WAV files in source folder.', nil, mfInformation + mfOKButton);
     Exit;
@@ -893,19 +891,19 @@ begin
     Exit;
   end;
 
-  Src := SourceList^.GetFullPath(SourceList^.Focused);
-  Dest := GetUniqueDestPath(TargetFolder, SourceList^.GetFileName(SourceList^.Focused));
+  Src := SourceList.GetFullPath(SourceList.Focused);
+  Dest := GetUniqueDestPath(TargetFolder, SourceList.GetFileName(SourceList.Focused));
 
   if Winapi.Windows.CopyFile(PChar(Src), PChar(Dest), True) then
   begin
     LastOp := opCopy;
     LastSrcFile := Src;
     LastDestFile := Dest;
-    LastIndex := SourceList^.Focused;
+    LastIndex := SourceList.Focused;
     AdvanceNext;
     { Refresh target list to show new file }
     if TargetList <> nil then
-      TargetList^.LoadFolder(TargetFolder);
+      TargetList.LoadFolder(TargetFolder);
   end
   else
     MessageBox('Failed to copy file.', nil, mfError + mfOKButton);
@@ -917,7 +915,7 @@ var
   Idx: Integer;
 begin
   if SourceList = nil then Exit;
-  if SourceList^.FCount = 0 then
+  if SourceList.FCount = 0 then
   begin
     MessageBox('No WAV files in source folder.', nil, mfInformation + mfOKButton);
     Exit;
@@ -940,9 +938,9 @@ begin
     Exit;
   end;
 
-  Idx := SourceList^.Focused;
-  Src := SourceList^.GetFullPath(Idx);
-  Dest := GetUniqueDestPath(TargetFolder, SourceList^.GetFileName(Idx));
+  Idx := SourceList.Focused;
+  Src := SourceList.GetFullPath(Idx);
+  Dest := GetUniqueDestPath(TargetFolder, SourceList.GetFileName(Idx));
 
   if Winapi.Windows.MoveFileEx(PChar(Src), PChar(Dest), MOVEFILE_COPY_ALLOWED) then
   begin
@@ -951,14 +949,14 @@ begin
     LastDestFile := Dest;
     LastIndex := Idx;
     DoStop; { Stop playing if this file was playing }
-    SourceList^.RemoveItem(Idx);
+    SourceList.RemoveItem(Idx);
     { Update LastFocused and trigger autoplay }
-    LastFocused := SourceList^.Focused;
-    if AutoPlay and (SourceList^.FCount > 0) then
+    LastFocused := SourceList.Focused;
+    if AutoPlay and (SourceList.FCount > 0) then
       DoPlay;
     { Refresh target list to show new file }
     if TargetList <> nil then
-      TargetList^.LoadFolder(TargetFolder);
+      TargetList.LoadFolder(TargetFolder);
   end
   else
     MessageBox('Failed to move file.', nil, mfError + mfOKButton);
@@ -970,7 +968,7 @@ var
   Idx: Integer;
 begin
   if SourceList = nil then Exit;
-  if SourceList^.FCount = 0 then
+  if SourceList.FCount = 0 then
   begin
     MessageBox('No WAV files in source folder.', nil, mfInformation + mfOKButton);
     Exit;
@@ -982,10 +980,10 @@ begin
       Exit;
   end;
 
-  Idx := SourceList^.Focused;
-  Src := SourceList^.GetFullPath(Idx);
+  Idx := SourceList.Focused;
+  Src := SourceList.GetFullPath(Idx);
   { Use unique temp filename to avoid collision with previous deletes }
-  Backup := TPath.GetTempPath + 'KeepToss_' + IntToStr(GetTickCount) + '_' + SourceList^.GetFileName(Idx);
+  Backup := TPath.GetTempPath + 'KeepToss_' + IntToStr(GetTickCount) + '_' + SourceList.GetFileName(Idx);
 
   { Move to temp folder for undo capability }
   if Winapi.Windows.MoveFile(PChar(Src), PChar(Backup)) then
@@ -995,10 +993,10 @@ begin
     LastDestFile := Backup;
     LastIndex := Idx;
     DoStop; { Stop playing if this file was playing }
-    SourceList^.RemoveItem(Idx);
+    SourceList.RemoveItem(Idx);
     { Update LastFocused and trigger autoplay }
-    LastFocused := SourceList^.Focused;
-    if AutoPlay and (SourceList^.FCount > 0) then
+    LastFocused := SourceList.Focused;
+    if AutoPlay and (SourceList.FCount > 0) then
       DoPlay;
   end
   else
@@ -1015,7 +1013,7 @@ begin
           LastOp := opNone;
           { Refresh target list }
           if TargetList <> nil then
-            TargetList^.LoadFolder(TargetFolder);
+            TargetList.LoadFolder(TargetFolder);
           MessageBox('Copy undone.', nil, mfInformation + mfOKButton);
         end
         else
@@ -1025,13 +1023,13 @@ begin
       begin
         if Winapi.Windows.MoveFile(PChar(LastDestFile), PChar(LastSrcFile)) then
         begin
-          SourceList^.LoadFolder(SourceFolder);
-          if LastIndex < SourceList^.FCount then
-            SourceList^.FocusItem(LastIndex);
+          SourceList.LoadFolder(SourceFolder);
+          if LastIndex < SourceList.FCount then
+            SourceList.FocusItem(LastIndex);
           LastOp := opNone;
           { Refresh target list }
           if TargetList <> nil then
-            TargetList^.LoadFolder(TargetFolder);
+            TargetList.LoadFolder(TargetFolder);
           MessageBox('Move undone.', nil, mfInformation + mfOKButton);
         end
         else
@@ -1041,9 +1039,9 @@ begin
       begin
         if Winapi.Windows.MoveFile(PChar(LastDestFile), PChar(LastSrcFile)) then
         begin
-          SourceList^.LoadFolder(SourceFolder);
-          if LastIndex < SourceList^.FCount then
-            SourceList^.FocusItem(LastIndex);
+          SourceList.LoadFolder(SourceFolder);
+          if LastIndex < SourceList.FCount then
+            SourceList.FocusItem(LastIndex);
           LastOp := opNone;
           MessageBox('Delete undone.', nil, mfInformation + mfOKButton);
         end
@@ -1059,7 +1057,7 @@ procedure TKeepTossApp.ToggleAutoPlay;
 begin
   AutoPlay := not AutoPlay;
   if StatusLine <> nil then
-    StatusLine^.DrawView;
+    StatusLine.DrawView;
 end;
 
 procedure TKeepTossApp.AdvanceNext;
@@ -1068,11 +1066,11 @@ var
 begin
   if SourceList = nil then Exit;
 
-  CurIdx := SourceList^.Focused;
-  if CurIdx < SourceList^.FCount - 1 then
+  CurIdx := SourceList.Focused;
+  if CurIdx < SourceList.FCount - 1 then
   begin
-    SourceList^.FocusItem(CurIdx + 1);
-    LastFocused := SourceList^.Focused; { Update to prevent autoplay re-trigger }
+    SourceList.FocusItem(CurIdx + 1);
+    LastFocused := SourceList.Focused; { Update to prevent autoplay re-trigger }
     if AutoPlay then
       DoPlay;
   end;
@@ -1087,10 +1085,10 @@ begin
     { Double-click delay in ticks (default 8 = ~440ms) }
     DoubleDelay := 8;
 
-    KeepTossApp.Init;
+    KeepTossApp := TKeepTossApp.Create;
     if (KeepTossApp.SourceFolder <> '') and (KeepTossApp.TargetFolder <> '') then
       KeepTossApp.Run;
-    KeepTossApp.Done;
+    FreeAndNil(KeepTossApp);
   except
     on E: Exception do
       Writeln(E.ClassName, ': ', E.Message);

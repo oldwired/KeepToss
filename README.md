@@ -98,7 +98,7 @@ KeepToss.exe "C:\Samples" "C:\Keep"    # Set both folders, start immediately
 
 ## Dependencies
 
-- [Free Vision for Delphi](https://github.com/oldwired/fv-delphi) - Text-mode UI framework (LGPL with linking exception)
+- [Free Vision Modern (fv-delphi-modern)](https://github.com/oldwired/fv-delphi-modern) - Text-mode UI framework (LGPL with linking exception)
 
 ## Build
 
