@@ -10,10 +10,11 @@ uses
   Winapi.Windows,
   Winapi.MMSystem,
   Objects in '..\Libraries\fv-delphi-modern\src\Objects.pas',
-  Video in '..\Libraries\fv-delphi-modern\src\Video.pas',
+  FVScreen in '..\Libraries\fv-delphi-modern\src\FVScreen.pas',
   Drivers in '..\Libraries\fv-delphi-modern\src\Drivers.pas',
   FVInterfaces in '..\Libraries\fv-delphi-modern\src\FVInterfaces.pas',
   FVSerialization in '..\Libraries\fv-delphi-modern\src\FVSerialization.pas',
+  FVBoxChars in '..\Libraries\fv-delphi-modern\src\FVBoxChars.pas',
   Views in '..\Libraries\fv-delphi-modern\src\Views.pas',
   Menus in '..\Libraries\fv-delphi-modern\src\Menus.pas',
   HistList in '..\Libraries\fv-delphi-modern\src\histlist.pas',
@@ -72,7 +73,7 @@ type
   { Custom status line with autoplay indicator }
   TKeepTossStatusLine = class(TStatusLine)
     FAutoPlay: PBoolean;
-    function Hint(AHelpCtx: Word): ShortString; override;
+    function Hint(AHelpCtx: Word): string; override;
   end;
 
   { Main application }
@@ -410,11 +411,11 @@ procedure TPathHeader.Draw;
 var
   B: TDrawBuffer;
   Color: Byte;
-  S: ShortString;
+  S: string;
   MidX, SourceWidth, TargetWidth: Integer;
 begin
   Color := $1E; { Yellow on blue }
-  MoveChar(B, ' ', Color, Size.X);
+  DrawChar(B, 0, ' ', Color, Size.X);
 
   MidX := Size.X div 2;
   SourceWidth := MidX;
@@ -423,19 +424,19 @@ begin
   { Draw source path }
   if FSourcePath <> nil then
   begin
-    S := ShortString('Source: ' + FSourcePath^);
+    S := 'Source: ' + FSourcePath^;
     if Length(S) > SourceWidth then
       S := Copy(S, 1, SourceWidth - 3) + '...';
-    MoveStr(B, S, Color);
+    DrawStr(B, 0, S, Color);
   end;
 
   { Draw target path }
   if FTargetPath <> nil then
   begin
-    S := ShortString('Target: ' + FTargetPath^);
+    S := 'Target: ' + FTargetPath^;
     if Length(S) > TargetWidth then
       S := Copy(S, 1, TargetWidth - 3) + '...';
-    MoveStr(B[MidX], S, Color);
+    DrawStr(B, MidX, S, Color);
   end;
 
   WriteLine(0, 0, Size.X, 1, B);
@@ -468,7 +469,7 @@ end;
 { TKeepTossStatusLine }
 { -------------------------------------------------------------------------- }
 
-function TKeepTossStatusLine.Hint(AHelpCtx: Word): ShortString;
+function TKeepTossStatusLine.Hint(AHelpCtx: Word): string;
 begin
   if (FAutoPlay <> nil) and FAutoPlay^ then
     Result := 'AutoPlay: ON'
@@ -502,7 +503,7 @@ begin
     { Validate source folder exists }
     if not DirectoryExists(SourceFolder) then
     begin
-      MessageBox('Source folder does not exist: ' + SourceFolder, nil, mfError + mfOKButton);
+      MessageBox('Source folder does not exist: ' + SourceFolder, mfError + mfOKButton);
       SourceFolder := '';
     end;
   end;
@@ -512,7 +513,7 @@ begin
     { Validate target path is usable (don't create it yet) }
     if (TargetFolder <> '') and not IsValidPath(TargetFolder) then
     begin
-      MessageBox('Invalid target path: ' + TargetFolder, nil, mfError + mfOKButton);
+      MessageBox('Invalid target path: ' + TargetFolder, mfError + mfOKButton);
       TargetFolder := '';
     end;
   end;
@@ -810,7 +811,7 @@ begin
   begin
     SourceList.LoadFolder(SourceFolder);
     if SourceList.FCount = 0 then
-      MessageBox('No WAV files found in source folder.', nil, mfInformation + mfOKButton);
+      MessageBox('No WAV files found in source folder.', mfInformation + mfOKButton);
   end;
   if TargetList <> nil then
   begin
@@ -870,24 +871,24 @@ begin
   if SourceList = nil then Exit;
   if SourceList.FCount = 0 then
   begin
-    MessageBox('No WAV files in source folder.', nil, mfInformation + mfOKButton);
+    MessageBox('No WAV files in source folder.', mfInformation + mfOKButton);
     Exit;
   end;
   if TargetFolder = '' then
   begin
-    MessageBox('No target folder selected.', nil, mfError + mfOKButton);
+    MessageBox('No target folder selected.', mfError + mfOKButton);
     Exit;
   end;
   if SameText(SourceFolder, TargetFolder) then
   begin
-    MessageBox('Source and target folders are the same.', nil, mfWarning + mfOKButton);
+    MessageBox('Source and target folders are the same.', mfWarning + mfOKButton);
     Exit;
   end;
 
   { Ensure target folder exists }
   if not EnsureDirectoryExists(TargetFolder) then
   begin
-    MessageBox('Cannot access target folder.', nil, mfError + mfOKButton);
+    MessageBox('Cannot access target folder.', mfError + mfOKButton);
     Exit;
   end;
 
@@ -906,7 +907,7 @@ begin
       TargetList.LoadFolder(TargetFolder);
   end
   else
-    MessageBox('Failed to copy file.', nil, mfError + mfOKButton);
+    MessageBox('Failed to copy file.', mfError + mfOKButton);
 end;
 
 procedure TKeepTossApp.DoMove;
@@ -917,24 +918,24 @@ begin
   if SourceList = nil then Exit;
   if SourceList.FCount = 0 then
   begin
-    MessageBox('No WAV files in source folder.', nil, mfInformation + mfOKButton);
+    MessageBox('No WAV files in source folder.', mfInformation + mfOKButton);
     Exit;
   end;
   if TargetFolder = '' then
   begin
-    MessageBox('No target folder selected.', nil, mfError + mfOKButton);
+    MessageBox('No target folder selected.', mfError + mfOKButton);
     Exit;
   end;
   if SameText(SourceFolder, TargetFolder) then
   begin
-    MessageBox('Source and target folders are the same.', nil, mfWarning + mfOKButton);
+    MessageBox('Source and target folders are the same.', mfWarning + mfOKButton);
     Exit;
   end;
 
   { Ensure target folder exists }
   if not EnsureDirectoryExists(TargetFolder) then
   begin
-    MessageBox('Cannot access target folder.', nil, mfError + mfOKButton);
+    MessageBox('Cannot access target folder.', mfError + mfOKButton);
     Exit;
   end;
 
@@ -959,7 +960,7 @@ begin
       TargetList.LoadFolder(TargetFolder);
   end
   else
-    MessageBox('Failed to move file.', nil, mfError + mfOKButton);
+    MessageBox('Failed to move file.', mfError + mfOKButton);
 end;
 
 procedure TKeepTossApp.DoDelete(Confirm: Boolean);
@@ -970,13 +971,13 @@ begin
   if SourceList = nil then Exit;
   if SourceList.FCount = 0 then
   begin
-    MessageBox('No WAV files in source folder.', nil, mfInformation + mfOKButton);
+    MessageBox('No WAV files in source folder.', mfInformation + mfOKButton);
     Exit;
   end;
 
   if Confirm then
   begin
-    if MessageBox('Delete this file?', nil, mfConfirmation + mfYesNoCancel) <> cmYes then
+    if MessageBox('Delete this file?', mfConfirmation + mfYesNoCancel) <> cmYes then
       Exit;
   end;
 
@@ -1000,7 +1001,7 @@ begin
       DoPlay;
   end
   else
-    MessageBox('Failed to delete file.', nil, mfError + mfOKButton);
+    MessageBox('Failed to delete file.', mfError + mfOKButton);
 end;
 
 procedure TKeepTossApp.DoUndo;
@@ -1014,10 +1015,10 @@ begin
           { Refresh target list }
           if TargetList <> nil then
             TargetList.LoadFolder(TargetFolder);
-          MessageBox('Copy undone.', nil, mfInformation + mfOKButton);
+          MessageBox('Copy undone.', mfInformation + mfOKButton);
         end
         else
-          MessageBox('Failed to undo copy.', nil, mfError + mfOKButton);
+          MessageBox('Failed to undo copy.', mfError + mfOKButton);
       end;
     opMove:
       begin
@@ -1030,10 +1031,10 @@ begin
           { Refresh target list }
           if TargetList <> nil then
             TargetList.LoadFolder(TargetFolder);
-          MessageBox('Move undone.', nil, mfInformation + mfOKButton);
+          MessageBox('Move undone.', mfInformation + mfOKButton);
         end
         else
-          MessageBox('Failed to undo move.', nil, mfError + mfOKButton);
+          MessageBox('Failed to undo move.', mfError + mfOKButton);
       end;
     opDelete:
       begin
@@ -1043,13 +1044,13 @@ begin
           if LastIndex < SourceList.FCount then
             SourceList.FocusItem(LastIndex);
           LastOp := opNone;
-          MessageBox('Delete undone.', nil, mfInformation + mfOKButton);
+          MessageBox('Delete undone.', mfInformation + mfOKButton);
         end
         else
-          MessageBox('Failed to undo delete.', nil, mfError + mfOKButton);
+          MessageBox('Failed to undo delete.', mfError + mfOKButton);
       end;
     opNone:
-      MessageBox('Nothing to undo.', nil, mfInformation + mfOKButton);
+      MessageBox('Nothing to undo.', mfInformation + mfOKButton);
   end;
 end;
 

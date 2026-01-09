@@ -1,3 +1,279 @@
 # Free Vision Modern (fv-delphi-modern)
 
-[Free Vision Modern (fv-delphi-modern)](https://github.com/oldwired/fv-delphi-modern) - Text-mode UI framework (LGPL with linking exception)
+A modernized port of the Free Vision (FV) text-mode UI framework from Free Pascal to modern Delphi (12+).
+
+Free Vision is a classic console-based GUI toolkit originally derived from Borland's Turbo Vision. This **modern variant** uses Delphi `CLASS` syntax instead of the legacy Turbo Pascal `OBJECT` syntax, providing better IDE integration, proper inheritance, and modern memory management.
+
+## Features
+
+- **Complete TUI Framework**: Windows, dialogs, menus, status bars, buttons, input fields, and more
+- **Modern Architecture**: Interfaces (`IFVDrawable`, `ISerializable`), RTL generics (`TObjectList<T>`, `TStringList`)
+- **Text Editor**: Full-featured editor with find/replace, clipboard, undo, and file operations
+- **Hex Editor**: Binary file viewer/editor with hex and ASCII modes
+- **String Grid**: Spreadsheet-like grid with sorting, editing, selection, and CSV import/export
+- **Standard Dialogs**: Message boxes, file open/save dialogs, color selection, ASCII table
+- **Advanced Controls**: Tab controls, outline/tree views, progress gauges, timed dialogs
+- **Input Validation**: Built-in validators for ranges, patterns, and lookups
+- **JSON Serialization**: Views implement `ISerializable` for state persistence
+- **Windows Console**: Native Windows Console API for display and input
+- **Terminal Emulator**: Pseudo-terminal windows using Windows ConPTY
+
+## Terminal Emulator
+
+The terminal component (`TTerminalWindow`) provides a VT100-compatible terminal emulator using Windows ConPTY. It supports running command-line applications including other Free Vision apps.
+
+### Keyboard Controls
+
+The terminal uses **Ctrl+A** as the escape prefix (like GNU screen):
+
+| Key Sequence | Action |
+|--------------|--------|
+| **Ctrl+A, then any key** | Exit capture mode, send key to outer app |
+| **Ctrl+A, Ctrl+A** | Send literal Ctrl+A to child process |
+| **Shift+PageUp/Down** | Scroll through scrollback buffer |
+| **Mouse wheel** | Scroll through scrollback buffer |
+
+### Re-entering Capture Mode
+
+After exiting capture mode with Ctrl+A:
+- **Click** on the terminal to re-enter capture mode
+- Press **Enter** or **Esc** to re-enter capture mode
+
+### Features
+
+- VT100/ANSI escape sequence support
+- Scrollback buffer with configurable size
+- Text selection with mouse (double-click for word selection)
+- Copy/paste support (Ctrl+C/Ctrl+V when text selected)
+- Visual bell
+- Window title from OSC sequences
+- Session logging
+- Text reflow on resize
+
+## String Grid
+
+The `TStringGrid` component (`Grid.pas`) provides a spreadsheet-like data grid for console applications.
+
+### Features
+
+- Sortable columns with visual indicators
+- Cell editing (F2 or direct typing)
+- Row and cell selection modes
+- Clipboard support (copy/paste)
+- Undo support
+- Column resizing and auto-fit
+- Fixed header rows
+- JSON serialization for layout
+
+### CSV Import/Export
+
+The grid supports RFC 4180-compliant CSV files:
+
+```pascal
+// Load CSV file
+Grid.LoadFromCSV('data.csv');
+
+// Save to CSV
+Grid.SaveToCSV('output.csv');
+
+// With options
+var Opts := TCSVOptions.Create;
+Opts.Delimiter := cdSemicolon;        // or cdComma, cdTab, cdPipe, cdAuto
+Opts.CustomDelimiter := '~';          // Override with any character
+Opts.UseFixedHeaderRow := True;       // Headers as fixed row 0
+Opts.Encoding := ceUTF8BOM;           // UTF-8 with BOM (Excel compatible)
+Grid.LoadFromCSV('data.csv', Opts);
+Opts.Free;
+```
+
+### TCSVOptions Properties
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `Delimiter` | `cdComma` | Field delimiter (comma, semicolon, tab, pipe, auto-detect) |
+| `CustomDelimiter` | `#0` | Override delimiter with any character |
+| `Encoding` | `ceUTF8BOM` | File encoding (UTF-8 BOM, UTF-8, ANSI) |
+| `HasHeaders` | `True` | First row contains column headers |
+| `UseFixedHeaderRow` | `False` | Put headers in fixed row 0 |
+| `TrimWhitespace` | `False` | Trim spaces from values |
+| `AutoCreateColumns` | `True` | Create columns from CSV structure |
+
+## Hex Editor
+
+The `THexEditor` component (`HexEdit.pas`) provides a binary file viewer and editor.
+
+### Features
+
+- Classic hex editor layout (address | hex bytes | ASCII)
+- Dual editing modes: hex nibbles or ASCII characters
+- Selection support with keyboard (Shift+arrows) and mouse
+- Modified byte highlighting
+- File load/save operations
+- Pluggable data source interface (`IHexDataSource`)
+
+### Keyboard Controls
+
+| Key | Action |
+|-----|--------|
+| **Arrow keys** | Navigate bytes |
+| **Tab** | Toggle between hex and ASCII mode |
+| **Shift+Arrows** | Extend selection |
+| **0-9, A-F** | Edit hex nibble (in hex mode) |
+| **Any printable** | Edit ASCII character (in ASCII mode) |
+| **Home/End** | Jump to start/end of row |
+| **Ctrl+Home/End** | Jump to start/end of file |
+| **Page Up/Down** | Scroll by page |
+
+### Usage
+
+```pascal
+var
+  HexEdit: THexEditor;
+  Source: TMemoryHexSource;
+begin
+  Source := TMemoryHexSource.Create;
+  Source.LoadFromFile('data.bin');
+
+  HexEdit := THexEditor.Create(Bounds, Source);
+  // ... add to window
+
+  // Save changes
+  Source.SaveToFile('data.bin');
+end;
+```
+
+## Requirements
+
+- Delphi 12.x or later
+- Windows 32-bit or 64-bit target
+
+## Getting Started
+
+1. Open `FVTest.dproj` in the Delphi IDE
+2. Build and run the project
+3. Explore the Test menu to see various components in action
+
+### Minimal Application
+
+```pascal
+program MyApp;
+
+uses
+  App, Views, Menus, Drivers;
+
+type
+  TMyApp = class(TApplication)
+    procedure InitMenuBar; override;
+    procedure InitStatusLine; override;
+  end;
+
+procedure TMyApp.InitMenuBar;
+var
+  R: TRect;
+begin
+  GetExtent(R);
+  R.B.Y := R.A.Y + 1;
+  MenuBar := TMenuBar.Create(R, NewMenu(
+    NewSubMenu('~F~ile', hcNoContext, NewMenu(
+      NewItem('E~x~it', 'Alt-X', kbAltX, cmQuit, hcNoContext, nil)),
+    nil)));
+end;
+
+procedure TMyApp.InitStatusLine;
+var
+  R: TRect;
+begin
+  GetExtent(R);
+  R.A.Y := R.B.Y - 1;
+  StatusLine := TStatusLine.Create(R,
+    NewStatusDef(0, $FFFF,
+      NewStatusKey('~Alt-X~ Exit', kbAltX, cmQuit, nil),
+    nil));
+end;
+
+var
+  App: TMyApp;
+begin
+  App := TMyApp.Create;
+  App.Run;
+  App.Free;
+end.
+```
+
+## Project Structure
+
+```
+src/
+  FVCommon.pas      - Platform types (Sw_Word, PString, etc.)
+  FVInterfaces.pas  - Interface definitions (IFVDrawable, ISerializable, etc.)
+  FVSerialization.pas - JSON serialization helpers
+  Objects.pas       - Stream classes, string utilities
+  Video.pas         - Console output (Windows Console API)
+  Drivers.pas       - Keyboard and mouse input handling
+  Views.pas         - View hierarchy (TView, TGroup, TWindow, etc.)
+  Menus.pas         - Menu system (TMenuBar, TMenuBox, TStatusLine)
+  App.pas           - Application framework (TApplication)
+  Dialogs.pas       - Dialog controls (TDialog, TButton, TInputLine, etc.)
+  Grid.pas          - TStringGrid with CSV import/export
+  HexEdit.pas       - THexEditor binary viewer/editor
+  Validate.pas      - Input validation
+  MsgBox.pas        - Message box helpers
+  StdDlg.pas        - Standard file dialogs
+  Editors.pas       - Text editor components
+  ColorSel.pas      - Color selection dialog
+  Outline.pas       - Tree/outline view
+  Tabs.pas          - Tab control
+  Statuses.pas      - Progress gauges
+  Gadgets.pas       - Clock and heap views
+  ...
+```
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed class hierarchies and diagrams.
+
+## Porting Notes
+
+- Uses modern Delphi `CLASS` syntax with proper inheritance and `override`
+- All view classes derive directly from `TObject` (no intermediate base class)
+- Views implement interfaces: `IFVDrawable`, `IFVEventHandler`, `IFVDataAware`, `ISerializable`
+- Uses RTL generics: `TObjectList<T>`, `TStringList` (no custom collection classes)
+- `TClass.Create` / `Object.Free` instead of `New(P, Init)` / `Dispose(P, Done)`
+- Pointer types aliased for compatibility: `PView = TView`
+- `ShortString` used for FV string types (`Sw_String`, `PString`)
+- Windows Console API for video output and input
+- Range checking should be OFF at project level
+
+## Known Limitations
+
+- New **edge-cases**, **oversights** or **errors** may be introduced in this project
+
+## Known Issues
+
+- Corruption in ASCII Table display
+- Corruption in TStringGrid with wide Unicode characters
+
+## License
+
+This library is distributed under the **GNU Lesser General Public License (LGPL)** with the following linking exception:
+
+> As a special exception, the copyright holders of this library give you
+> permission to link this library with independent modules to produce an
+> executable, regardless of the license terms of these independent modules,
+> and to copy and distribute the resulting executable under terms of your choice,
+> provided that you also meet, for each linked independent module, the terms
+> and conditions of the license of that module. An independent module is a module
+> which is not derived from or based on this library. If you modify this
+> library, you may extend this exception to your version of the library, but you are
+> not obligated to do so. If you do not wish to do so, delete this exception
+> statement from your version.
+
+See `COPYING.TXT` for the complete license text.
+
+## Credits
+
+- Original Turbo Vision by Borland International
+- Free Vision by the Free Pascal Development Team
+- Delphi port by Claude Code (Anthropic)
+
+## Contributing
+
+Bug reports and contributions are welcome. Please ensure any modifications maintain compatibility with the original Free Vision API where possible.
