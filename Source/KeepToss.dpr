@@ -36,8 +36,14 @@ const
   cmDelete       = 1004;
   cmToggleAuto   = 1005;
   cmBrowse       = 1006;
+  cmSortByName   = 1007;
+  cmSortBySize   = 1008;
+  cmSortReverse  = 1009;
 
 type
+  { Sort mode for source list }
+  TSortMode = (smName, smSize);
+
   { Operation type for undo }
   TOperationType = (opNone, opCopy, opMove, opDelete);
 
@@ -101,6 +107,8 @@ type
     LastDestFile: string;
     LastIndex: Integer;
     LastFocused: Integer;
+    SortMode: TSortMode;
+    SortAscending: Boolean;
     constructor Create; override;
     destructor Destroy; override;
     procedure InitMenuBar; override;
@@ -119,6 +127,7 @@ type
     procedure DoDelete(Confirm: Boolean);
     procedure DoUndo;
     procedure ToggleAutoPlay;
+    procedure SortSourceList;
     procedure AdvanceNext;
   end;
 
@@ -300,8 +309,6 @@ end;
 procedure TSampleListView.LoadFolder(const AFolder: string);
 var
   SR: System.SysUtils.TSearchRec;
-  I, J: Integer;
-  Temp: TSampleInfo;
 begin
   FFolder := AFolder;
   SetLength(FSamples, 0);
@@ -319,16 +326,6 @@ begin
       end;
     until System.SysUtils.FindNext(SR) <> 0;
     System.SysUtils.FindClose(SR);
-
-    { Sort alphabetically (simple bubble sort) }
-    for I := 0 to FCount - 2 do
-      for J := I + 1 to FCount - 1 do
-        if CompareText(FSamples[I].FileName, FSamples[J].FileName) > 0 then
-        begin
-          Temp := FSamples[I];
-          FSamples[I] := FSamples[J];
-          FSamples[J] := Temp;
-        end;
   end;
 
   SetRange(FCount);
@@ -554,6 +551,8 @@ begin
   TargetList := nil;
   SourceScrollBar := nil;
   TargetScrollBar := nil;
+  SortMode := smName;
+  SortAscending := True;
 
   { Check command line arguments }
   if ParamCount >= 1 then
@@ -624,9 +623,13 @@ begin
       NewItem('~M~ove', 'M', 0, cmMove, hcNoContext,
       NewItem('~D~elete', 'X', 0, cmDelete, hcNoContext,
       NewItem('~U~ndo', 'Z', 0, cmUndo, hcNoContext, nil))))),
+    NewSubMenu('~V~iew', hcNoContext, NewMenu(
+      NewItem('Sort by ~N~ame', 'F5', kbF5, cmSortByName, hcNoContext,
+      NewItem('Sort by ~S~ize', 'F6', kbF6, cmSortBySize, hcNoContext,
+      NewItem('~R~everse Order', 'F7', kbF7, cmSortReverse, hcNoContext, nil)))),
     NewSubMenu('~O~ptions', hcNoContext, NewMenu(
       NewItem('Toggle ~A~utoplay', 'A', 0, cmToggleAuto, hcNoContext, nil)),
-    nil)))));
+    nil))))));
 end;
 
 procedure TKeepTossApp.InitStatusLine;
@@ -651,7 +654,7 @@ end;
 
 procedure TKeepTossApp.HandleEvent(var Event: TEvent);
 begin
-  { Handle space BEFORE inherited - TListViewer consumes space for selection }
+  { Handle keys BEFORE inherited - TApplication intercepts F5/F6 for cmZoom/cmNext }
   if Event.What = evKeyDown then
   begin
     if Event.CharCode = ' ' then
@@ -662,6 +665,51 @@ begin
         DoPlay;
       ClearEvent(Event);
       Exit;
+    end;
+    { Handle F5, F6, F7 before TApplication intercepts them }
+    case Event.KeyCode of
+      kbF5:
+        begin
+          SortMode := smName;
+          SortSourceList;
+          ClearEvent(Event);
+          Exit;
+        end;
+      kbF6:
+        begin
+          SortMode := smSize;
+          SortSourceList;
+          ClearEvent(Event);
+          Exit;
+        end;
+      kbF7:
+        begin
+          SortAscending := not SortAscending;
+          SortSourceList;
+          ClearEvent(Event);
+          Exit;
+        end;
+      kbTab:
+        begin
+          { Toggle focus between source and target lists }
+          if (SourceList <> nil) and (TargetList <> nil) then
+          begin
+            if SourceList.GetState(sfSelected) then
+              TargetList.Select
+            else
+              SourceList.Select;
+          end;
+          ClearEvent(Event);
+          Exit;
+        end;
+      kbEsc:
+        begin
+          { Return focus to source list }
+          if SourceList <> nil then
+            SourceList.Select;
+          ClearEvent(Event);
+          Exit;
+        end;
     end;
   end;
 
@@ -760,6 +808,21 @@ begin
         DoUndo;
       cmToggleAuto:
         ToggleAutoPlay;
+      cmSortByName:
+        begin
+          SortMode := smName;
+          SortSourceList;
+        end;
+      cmSortBySize:
+        begin
+          SortMode := smSize;
+          SortSourceList;
+        end;
+      cmSortReverse:
+        begin
+          SortAscending := not SortAscending;
+          SortSourceList;
+        end;
     else
       Exit;
     end;
@@ -869,6 +932,7 @@ begin
   if SourceList <> nil then
   begin
     SourceList.LoadFolder(SourceFolder);
+    SortSourceList;
     if SourceList.FCount = 0 then
       MessageBox('No WAV files found in source folder.', mfInformation + mfOKButton);
   end;
@@ -1118,6 +1182,47 @@ begin
   AutoPlay := not AutoPlay;
   if StatusLine <> nil then
     StatusLine.DrawView;
+end;
+
+procedure TKeepTossApp.SortSourceList;
+var
+  I, J: Integer;
+  Temp: TSampleInfo;
+  DoSwap: Boolean;
+begin
+  if SourceList = nil then Exit;
+  if SourceList.FCount < 2 then Exit;
+
+  { Simple bubble sort }
+  for I := 0 to SourceList.FCount - 2 do
+    for J := I + 1 to SourceList.FCount - 1 do
+    begin
+      case SortMode of
+        smName:
+          DoSwap := CompareText(SourceList.FSamples[I].FileName, SourceList.FSamples[J].FileName) > 0;
+        smSize:
+          DoSwap := SourceList.FSamples[I].FileSize > SourceList.FSamples[J].FileSize;
+      else
+        DoSwap := False;
+      end;
+
+      { Reverse for descending order }
+      if not SortAscending then
+        DoSwap := not DoSwap;
+
+      if DoSwap then
+      begin
+        Temp := SourceList.FSamples[I];
+        SourceList.FSamples[I] := SourceList.FSamples[J];
+        SourceList.FSamples[J] := Temp;
+      end;
+    end;
+
+  { Refocus first item and redraw }
+  if SourceList.FCount > 0 then
+    SourceList.FocusItem(0);
+  LastFocused := SourceList.Focused;
+  SourceList.DrawView;
 end;
 
 procedure TKeepTossApp.AdvanceNext;
