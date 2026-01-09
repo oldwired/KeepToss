@@ -23,7 +23,9 @@ uses
   FVCommon in '..\Libraries\fv-delphi-modern\src\FVCommon.pas',
   Validate in '..\Libraries\fv-delphi-modern\src\Validate.pas',
   Dialogs in '..\Libraries\fv-delphi-modern\src\Dialogs.pas',
-  MsgBox in '..\Libraries\fv-delphi-modern\src\MsgBox.pas';
+  MsgBox in '..\Libraries\fv-delphi-modern\src\MsgBox.pas',
+  Outline in '..\Libraries\fv-delphi-modern\src\Outline.pas',
+  StdDlg in '..\Libraries\fv-delphi-modern\src\StdDlg.pas';
 
 const
   { Application commands }
@@ -33,6 +35,7 @@ const
   cmMove         = 1003;
   cmDelete       = 1004;
   cmToggleAuto   = 1005;
+  cmBrowse       = 1006;
 
 type
   { Operation type for undo }
@@ -74,6 +77,12 @@ type
   TKeepTossStatusLine = class(TStatusLine)
     FAutoPlay: PBoolean;
     function Hint(AHelpCtx: Word): string; override;
+  end;
+
+  { Folder input dialog with Browse support }
+  TFolderDialog = class(TDialog)
+    InputLine: TInputLine;
+    procedure HandleEvent(var Event: TEvent); override;
   end;
 
   { Main application }
@@ -120,16 +129,16 @@ var
 { Helper Functions }
 { -------------------------------------------------------------------------- }
 
+
 function FolderInputBox(const Title, ALabel: string; var S: string): Word;
 var
   R: TRect;
-  Dialog: TDialog;
-  InputLine: TInputLine;
+  Dialog: TFolderDialog;
   ShortS: ShortString;
 begin
-  R.Assign(0, 0, 60, 8);
+  R.Assign(0, 0, 70, 8);
   R.Move((Desktop.Size.X - R.B.X) div 2, (Desktop.Size.Y - R.B.Y) div 2);
-  Dialog := TDialog.Create(R, Title);
+  Dialog := TFolderDialog.Create(R, Title);
   with Dialog do
   begin
     R.Assign(4 + Length(ALabel), 2, Size.X - 3, 3);
@@ -137,7 +146,10 @@ begin
     Insert(InputLine);
     R.Assign(2, 2, 3 + Length(ALabel), 3);
     Insert(TLabel.Create(R, ALabel, InputLine));
-    { OK button - default and placed first }
+    { Browse button }
+    R.Assign(Size.X - 36, Size.Y - 4, Size.X - 26, Size.Y - 2);
+    Insert(TButton.Create(R, '~B~rowse', cmBrowse, bfNormal));
+    { OK button - default }
     R.Assign(Size.X - 24, Size.Y - 4, Size.X - 14, Size.Y - 2);
     Insert(TButton.Create(R, 'O~K~', cmOk, bfDefault));
     { Cancel button }
@@ -146,11 +158,12 @@ begin
     Insert(TButton.Create(R, 'Cancel', cmCancel, bfNormal));
   end;
   ShortS := ShortString(S);
-  InputLine.SetData(ShortS);
+  Dialog.InputLine.SetData(ShortS);
+
   Result := Desktop.ExecView(Dialog);
   if Result = cmOk then
   begin
-    InputLine.GetData(ShortS);
+    Dialog.InputLine.GetData(ShortS);
     S := string(ShortS);
   end;
   FreeAndNil(Dialog);
@@ -475,6 +488,52 @@ begin
     Result := 'AutoPlay: ON'
   else
     Result := 'AutoPlay: OFF';
+end;
+
+{ -------------------------------------------------------------------------- }
+{ TFolderDialog }
+{ -------------------------------------------------------------------------- }
+
+procedure TFolderDialog.HandleEvent(var Event: TEvent);
+var
+  BrowseDialog: TFolderSelectDialog;
+  BrowsePath: DirStr;
+  ShortS: ShortString;
+  BrowseResult: Word;
+begin
+  inherited HandleEvent(Event);
+  if (Event.What = evCommand) and (Event.Command = cmBrowse) then
+  begin
+    { Open directory browser without closing this dialog }
+    BrowseDialog := TFolderSelectDialog.Create(cdNormal, 0);
+    try
+      { Initialize with current path from input line }
+      if InputLine <> nil then
+      begin
+        InputLine.GetData(ShortS);
+        BrowsePath := DirStr(ShortS);
+        if BrowsePath <> '' then
+          BrowseDialog.SetData(BrowsePath);
+      end;
+      BrowseResult := Desktop.ExecView(BrowseDialog);
+      if BrowseResult = cmOk then
+      begin
+        BrowseDialog.GetData(BrowsePath);
+        { Remove trailing backslash if present and path is longer than root }
+        if (Length(BrowsePath) > 3) and (BrowsePath[Length(BrowsePath)] = '\') then
+          SetLength(BrowsePath, Length(BrowsePath) - 1);
+        if InputLine <> nil then
+        begin
+          ShortS := ShortString(BrowsePath);
+          InputLine.SetData(ShortS);
+          InputLine.DrawView;
+        end;
+      end;
+    finally
+      FreeAndNil(BrowseDialog);
+    end;
+    ClearEvent(Event);
+  end;
 end;
 
 { -------------------------------------------------------------------------- }
